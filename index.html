@@ -1,0 +1,3109 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        #map {
+            width: 837px;
+            height: 909px;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet-svg-shape-markers.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/PrintLabels_1.js"></script>
+        <script src="data/TurfZoneStagingLocations_2.js"></script>
+        <script src="data/StagingLocationGOTVStagingLocation_4.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[40.57949350915644,-74.05544035479551],[40.802470715251374,-73.78554657499441]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_Positronnolabels_0');
+        map.getPane('pane_Positronnolabels_0').style.zIndex = 400;
+        var layer_Positronnolabels_0 = L.tileLayer('http://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            pane: 'pane_Positronnolabels_0',
+            opacity: 1.0,
+            attribution: '<a href="https://cartodb.com/basemaps/">Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_Positronnolabels_0;
+        map.addLayer(layer_Positronnolabels_0);
+        function pop_PrintLabels_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ElectDist'] !== null ? autolinker.link(String(feature.properties['ElectDist']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(String(feature.properties['Shape_Leng']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(String(feature.properties['Shape_Area']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TZ42'] !== null ? autolinker.link(String(feature.properties['TZ42']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TZ 42 long'] !== null ? autolinker.link(String(feature.properties['TZ 42 long']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_New ED'] !== null ? autolinker.link(String(feature.properties['z_eds_New ED']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_AD'] !== null ? autolinker.link(String(feature.properties['z_eds_AD']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_ED'] !== null ? autolinker.link(String(feature.properties['z_eds_ED']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_AD/ED_1'] !== null ? autolinker.link(String(feature.properties['z_eds_AD/ED_1']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_Old ED Borough'] !== null ? autolinker.link(String(feature.properties['z_eds_Old ED Borough']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_Old ED Subregion'] !== null ? autolinker.link(String(feature.properties['z_eds_Old ED Subregion']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_Old ED Neighborhood'] !== null ? autolinker.link(String(feature.properties['z_eds_Old ED Neighborhood']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_Turf Zone 4/2'] !== null ? autolinker.link(String(feature.properties['z_eds_Turf Zone 4/2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_ED Notes'] !== null ? autolinker.link(String(feature.properties['z_eds_ED Notes']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_Final universe tiers'] !== null ? autolinker.link(String(feature.properties['z_eds_Final universe tiers']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_Doors 4-2'] !== null ? autolinker.link(String(feature.properties['z_eds_Doors 4-2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_# Dems in universe'] !== null ? autolinker.link(String(feature.properties['z_eds_# Dems in universe']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z_eds_Muslim/South Asian/Arab groups'] !== null ? autolinker.link(String(feature.properties['z_eds_Muslim/South Asian/Arab groups']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_PrintLabels_1_0(feature) {
+            switch(String(feature.properties['z_eds_Turf Zone 4/2'])) {
+                case 'Assorted Central Queens':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,59,84,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Assorted EQ M/SA':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(92,83,222,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Assorted SBK M/SA':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,91,202,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Assorted West Bronx':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(64,217,44,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria Central 1':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(197,203,106,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria Central 2':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,162,80,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria Central East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(133,201,121,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,103,236,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(64,218,138,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(235,196,24,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria South West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(55,116,222,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Astoria West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(128,206,49,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bay Ridge North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(234,62,68,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bay Ridge South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(122,211,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy Central 1':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(187,218,124,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy Central 2':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(119,219,70,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(118,185,232,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(168,203,80,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy North West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(212,93,143,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,56,151,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,161,43,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy South West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,181,122,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bellerose':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(110,22,211,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Boerum Hill':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,19,76,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Briarwood':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(79,203,85,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bushwick Central':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(235,88,105,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bushwick East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(235,163,124,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bushwick North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(225,46,129,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bushwick North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(33,195,227,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bushwick South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(233,78,163,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bushwick West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(117,201,14,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Carroll Gardens':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(15,34,205,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Chinatown':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(79,120,224,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'City Line':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(156,105,226,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Clinton Hill North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(57,210,190,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Clinton Hill South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(31,231,198,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Clinton Hill South West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(223,127,217,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cobble Hill':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(214,121,177,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Crown Heights Central':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(54,236,111,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Crown Heights North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,59,96,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Crown Heights North West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(109,213,227,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Crown Heights South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(78,202,36,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Crown Heights West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(212,114,40,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Downtown BK East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(20,230,237,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Downtown BK West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(120,172,228,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'East Harlem':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(201,25,198,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'East Village North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(31,201,150,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'East Village North West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(236,73,114,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'East Village South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(105,225,219,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'East Village South West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,90,84,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Elmhurst':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,207,98,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Flatbush Central':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,147,122,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Flatbush North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,198,58,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Flatbush North West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,20,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Flatbush South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(144,59,200,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Floral Park/Glen Oaks':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(114,140,228,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Fort Greene North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(189,119,230,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Fort Greene South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,36,157,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Gowanus North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,74,74,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Gowanus South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(232,78,44,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greater Midtown':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,205,213,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greater Van Nest':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,99,228,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greenpoint North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(74,76,201,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greenpoint North West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(191,102,232,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greenpoint South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,120,233,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greenpoint South West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(54,212,70,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greenwood Heights Alexa':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,203,136,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greenwood Heights North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(112,228,83,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hamilton Heights North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,171,212,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hamilton Heights South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(193,63,232,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Harlem Central':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(120,180,206,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Harlem North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,147,40,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Harlem South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(212,239,103,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hell\'s Kitchen':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(240,162,59,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hollis':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(91,230,36,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Inwood East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(228,31,107,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Inwood West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(80,235,134,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jackson Heights East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(119,148,210,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jackson Heights North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(89,18,202,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jackson Heights West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(239,34,102,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jamaica':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(226,90,212,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jamaica Hills':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(216,183,75,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kensington East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(79,32,218,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kensington South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,205,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kensington West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(223,129,209,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'LeFrak City':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(196,89,223,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'LES':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(119,174,209,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'LIC North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(122,220,148,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'LIC South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(128,135,232,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Morningside Heights':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,134,229,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ozone Park':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,204,182,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Park Slope Central':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(118,234,165,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Park Slope North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(222,134,110,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Park Slope North West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,121,183,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Park Slope South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(121,105,213,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Park Slope South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(160,32,211,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Park Slope South West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(168,203,118,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parkchester':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,238,64,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'PLG East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(83,234,110,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'PLG West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(125,144,228,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Prospect Heights East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(33,228,153,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Prospect Heights North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(30,206,159,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Prospect Heights West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(109,61,203,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Queens Village':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(96,210,97,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Red Hook':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,79,195,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Richmond Hill North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(199,221,36,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Richmond Hill South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(92,172,212,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ridgewood East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(147,225,91,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ridgewood North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,132,121,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ridgewood South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(214,31,177,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'South Jamaica':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(226,157,92,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'South Ozone Park':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(200,41,218,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Staten Island':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(89,210,80,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Stuytown North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(200,64,52,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Stuytown South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(131,16,226,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sunnyside East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,221,172,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sunnyside North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,90,222,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sunnyside West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,78,20,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sunset Park':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(46,186,233,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'UES':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(89,211,142,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'UWS':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(203,194,21,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Washington Heights East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(239,166,120,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Washington Heights North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(34,236,236,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Washington Heights South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(132,48,210,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Washington Heights West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,66,78,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'West Village East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(182,226,50,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'West Village West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(99,120,238,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Westchester Square':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(235,71,153,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg Central':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(173,227,79,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(41,127,233,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg North East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(61,180,213,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg North West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,209,44,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(45,218,71,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg South East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,179,110,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg South West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(135,225,217,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Windsor Terrace East':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(96,225,22,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Windsor Terrace West':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(69,66,229,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Woodside North':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,15,227,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Woodside South':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(163,236,103,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'NULL':
+                    return {
+                pane: 'pane_PrintLabels_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(78,218,169,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_PrintLabels_1');
+        map.getPane('pane_PrintLabels_1').style.zIndex = 401;
+        map.getPane('pane_PrintLabels_1').style['mix-blend-mode'] = 'normal';
+        var layer_PrintLabels_1 = new L.geoJson(json_PrintLabels_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PrintLabels_1',
+            layerName: 'layer_PrintLabels_1',
+            pane: 'pane_PrintLabels_1',
+            onEachFeature: pop_PrintLabels_1,
+            style: style_PrintLabels_1_0,
+        });
+        bounds_group.addLayer(layer_PrintLabels_1);
+        map.addLayer(layer_PrintLabels_1);
+        function pop_TurfZoneStagingLocations_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">EV Site</th>\
+                        <td class="visible-with-data" id="EV Site">' + (feature.properties['EV Site'] !== null ? autolinker.link(String(feature.properties['EV Site']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Pollsite Turf Zone</th>\
+                        <td>' + (feature.properties['Pollsite Turf Zone'] !== null ? autolinker.link(String(feature.properties['Pollsite Turf Zone']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Staging Location</th>\
+                        <td>' + (feature.properties['Staging Location'] !== null ? autolinker.link(String(feature.properties['Staging Location']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Pollsite</th>\
+                        <td>' + (feature.properties['Pollsite'] !== null ? autolinker.link(String(feature.properties['Pollsite']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Pollsite Address</th>\
+                        <td>' + (feature.properties['Pollsite Address'] !== null ? autolinker.link(String(feature.properties['Pollsite Address']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Pollsite Neighborhood</th>\
+                        <td>' + (feature.properties['Pollsite Neighborhood'] !== null ? autolinker.link(String(feature.properties['Pollsite Neighborhood']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_TurfZoneStagingLocations_2_0(feature) {
+            switch(String(feature.properties['Staging Location'])) {
+                case 'Astoria':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,58,145,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'BACKUP PS 8 (30 Mins by Location)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(169,130,238,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bay Ridge':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(65,123,217,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed Stuy':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(122,181,208,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed Stuy Ymca':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(183,69,208,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bed-Stuy':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(131,181,225,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Boerum Hill':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,86,182,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bushwick':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,230,121,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Chinatown (DSA)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(50,240,186,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Clinton Hill':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(29,14,236,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Concourse':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,45,202,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Crown Heights':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,49,118,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Crown Heights (East)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(137,209,22,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ditmars/Steinway':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,221,102,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ditmas Park':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(146,80,207,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Downtown BK/North Park Slope Staging Location':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(108,204,24,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'East Flatbush/Little Haiti':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(232,115,92,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'East Village':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(218,47,44,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Flatbush':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(38,236,94,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Flatiron (Office)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(110,207,194,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Gowanus (Office)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,87,235,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Greenpoint':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,23,48,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Harlem (Central)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(68,225,37,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Harlem (North)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(106,204,61,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jackson Heights (DRUM)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(225,74,117,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kensington':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,30,186,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kew Gardens':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(68,221,224,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Norwood (West Bronx)':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(120,87,240,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parkchester':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(100,234,156,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'PLG':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,190,121,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Prospect Heights':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,218,48,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ridgewood':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,119,33,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'South Bushwick':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,133,229,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'South Slope':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(109,202,121,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sunset Park':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(202,157,79,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Upper East Side':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,138,107,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Upper West Side':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(94,219,165,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Washington Heights':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(123,193,207,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Williamsburg':
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,100,200,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_TurfZoneStagingLocations_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,1,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_TurfZoneStagingLocations_2');
+        map.getPane('pane_TurfZoneStagingLocations_2').style.zIndex = 402;
+        map.getPane('pane_TurfZoneStagingLocations_2').style['mix-blend-mode'] = 'normal';
+        var layer_TurfZoneStagingLocations_2 = new L.geoJson(json_TurfZoneStagingLocations_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TurfZoneStagingLocations_2',
+            layerName: 'layer_TurfZoneStagingLocations_2',
+            pane: 'pane_TurfZoneStagingLocations_2',
+            onEachFeature: pop_TurfZoneStagingLocations_2,
+            style: style_TurfZoneStagingLocations_2_0,
+        });
+        bounds_group.addLayer(layer_TurfZoneStagingLocations_2);
+        map.addLayer(layer_TurfZoneStagingLocations_2);
+        map.createPane('pane_Positronlabelsonly_3');
+        map.getPane('pane_Positronlabelsonly_3').style.zIndex = 403;
+        var layer_Positronlabelsonly_3 = L.tileLayer('https://a.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
+            pane: 'pane_Positronlabelsonly_3',
+            opacity: 1.0,
+            attribution: '<a href="https://cartodb.com/basemaps/">Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_Positronlabelsonly_3;
+        map.addLayer(layer_Positronlabelsonly_3);
+        function pop_StagingLocationGOTVStagingLocation_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Name</th>\
+                        <td class="visible-with-data" id="Name">' + (feature.properties['Name'] !== null ? autolinker.link(String(feature.properties['Name']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">description</th>\
+                        <td class="visible-with-data" id="description">' + (feature.properties['description'] !== null ? autolinker.link(String(feature.properties['description']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_StagingLocationGOTVStagingLocation_4_0() {
+            return {
+                pane: 'pane_StagingLocationGOTVStagingLocation_4',
+                radius: 13.2,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,175,255,1.0)',
+                interactive: true,
+            }
+        }
+        function style_StagingLocationGOTVStagingLocation_4_1() {
+            return {
+                pane: 'pane_StagingLocationGOTVStagingLocation_4',
+                radius: 14.4,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,175,255,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_StagingLocationGOTVStagingLocation_4');
+        map.getPane('pane_StagingLocationGOTVStagingLocation_4').style.zIndex = 404;
+        map.getPane('pane_StagingLocationGOTVStagingLocation_4').style['mix-blend-mode'] = 'normal';
+        var layer_StagingLocationGOTVStagingLocation_4 = new L.geoJson.multiStyle(json_StagingLocationGOTVStagingLocation_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_StagingLocationGOTVStagingLocation_4',
+            layerName: 'layer_StagingLocationGOTVStagingLocation_4',
+            pane: 'pane_StagingLocationGOTVStagingLocation_4',
+            onEachFeature: pop_StagingLocationGOTVStagingLocation_4,
+            pointToLayers: [function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_StagingLocationGOTVStagingLocation_4_0(feature));
+            },function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_StagingLocationGOTVStagingLocation_4_1(feature));
+            },
+        ]});
+        bounds_group.addLayer(layer_StagingLocationGOTVStagingLocation_4);
+        map.addLayer(layer_StagingLocationGOTVStagingLocation_4);
+        setBounds();
+        var i = 0;
+        layer_PrintLabels_1.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['z_eds_Turf Zone 4/2'] !== null?String('<div style="color: #000000; font-size: 2pt; font-family: \'Helvetica\', sans-serif;">' + layer.feature.properties['z_eds_Turf Zone 4/2']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_PrintLabels_1'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_PrintLabels_1]);
+        map.on("zoomend", function(){
+            resetLabels([layer_PrintLabels_1]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_PrintLabels_1]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_PrintLabels_1]);
+        });
+        </script>
+    </body>
+</html>
